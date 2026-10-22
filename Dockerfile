@@ -13,6 +13,7 @@ RUN npm ci --omit=dev
 COPY server.js ./
 COPY models/ ./models/
 COPY docs/ ./docs/
+COPY public/ ./public/
 
 EXPOSE 5001
 

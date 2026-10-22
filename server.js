@@ -48,6 +48,45 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 
+// Serve Welcome Page at root /
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Serve static assets from public/
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Path Rewriting Middleware: Allow calling endpoints directly without /api prefix
+// (e.g. /auth/login -> /api/auth/login, /classes -> /api/classes)
+const apiPrefixes = [
+  '/auth',
+  '/admin',
+  '/subscription',
+  '/user',
+  '/store',
+  '/rewards',
+  '/classes',
+  '/teacher-classes',
+  '/school-info',
+  '/announcements',
+  '/productivity',
+  '/homeworks',
+  '/attendance',
+  '/leaves',
+  '/notifications',
+  '/points'
+];
+
+app.use((req, res, next) => {
+  if (!req.url.startsWith('/api') && !req.url.startsWith('/docs')) {
+    const isApiMatch = apiPrefixes.some(prefix => req.path === prefix || req.path.startsWith(prefix + '/') || req.path.startsWith(prefix + '?'));
+    if (isApiMatch) {
+      req.url = '/api' + req.url;
+    }
+  }
+  next();
+});
+
 // Swagger Documentation at /docs and /api/docs
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
   customSiteTitle: 'mCode API Documentation'
@@ -2626,15 +2665,19 @@ app.get('/api/notifications', requireAuth, async (req, res) => {
 });
 
 // Connect Database & Start Server
-mongoose.connect(MONGODB_URI)
-  .then(async () => {
-    console.log('[MongoDB] Connected successfully to MongoDB Atlas.');
-    await seedDefaultUser();
-    app.listen(PORT, () => {
-      console.log(`[Server] Rangermate backend server running on http://localhost:${PORT}`);
+if (require.main === module) {
+  mongoose.connect(MONGODB_URI)
+    .then(async () => {
+      console.log('[MongoDB] Connected successfully to MongoDB Atlas.');
+      await seedDefaultUser();
+      app.listen(PORT, () => {
+        console.log(`[Server] mCode backend server running on http://localhost:${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error('[MongoDB Error] Database connection failed:', err);
+      process.exit(1);
     });
-  })
-  .catch((err) => {
-    console.error('[MongoDB Error] Database connection failed:', err);
-    process.exit(1);
-  });
+}
+
+module.exports = app;
