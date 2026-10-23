@@ -125,3 +125,14 @@
   from = "/notifications"
   to = "/.netlify/functions/api"
   status = 200
+
+[[redirects]]
+  from = "/school-info"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/accounts/*"
+  to = "/.netlify/functions/api"
+  status = 200
+

@@ -212,6 +212,9 @@ const attendanceSchema = new mongoose.Schema({
 const schoolInfoSchema = new mongoose.Schema({
   schoolName: { type: String, default: 'Rangermate Academy' },
   schoolCode: { type: String, default: 'RMA-2026' },
+  appName: { type: String, default: 'mcode' },
+  logoUrl: { type: String, default: '' },
+  faviconUrl: { type: String, default: '' },
   databaseName: { type: String, default: '' },
   principalName: { type: String, default: 'Dr. Arthur Vance' },
   contactEmail: { type: String, default: 'admin@rangermate.com' },

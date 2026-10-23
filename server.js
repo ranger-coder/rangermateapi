@@ -596,7 +596,7 @@ app.put('/api/admin/accounts/:id', requireAdmin, async (req, res) => {
       return res.status(403).json({ success: false, message: 'Permission denied. You can only edit your own school account.' });
     }
 
-    const { name, email, role, databaseName } = req.body;
+    const { name, appName, logoUrl, faviconUrl, email, role, databaseName } = req.body;
 
     const account = await Account.findById(id);
     if (!account) {
@@ -604,6 +604,9 @@ app.put('/api/admin/accounts/:id', requireAdmin, async (req, res) => {
     }
 
     if (name) account.name = name.trim();
+    if (appName !== undefined) account.appName = appName.trim();
+    if (logoUrl !== undefined) account.logoUrl = logoUrl;
+    if (faviconUrl !== undefined) account.faviconUrl = faviconUrl;
     if (email) account.email = email.trim().toLowerCase();
     if (role && req.admin.isSuperAdmin) account.role = role.trim();
     if (databaseName && req.admin.isSuperAdmin) {
@@ -611,6 +614,22 @@ app.put('/api/admin/accounts/:id', requireAdmin, async (req, res) => {
     }
 
     await account.save();
+
+    // Sync to tenant school database SchoolInfo
+    try {
+      const models = getTenantModels(account.databaseName);
+      let schoolInfo = await models.SchoolInfo.findOne();
+      if (schoolInfo) {
+        if (name) schoolInfo.schoolName = name.trim();
+        if (appName !== undefined) schoolInfo.appName = appName.trim();
+        if (logoUrl !== undefined) schoolInfo.logoUrl = logoUrl;
+        if (faviconUrl !== undefined) schoolInfo.faviconUrl = faviconUrl;
+        schoolInfo.updatedAt = new Date();
+        await schoolInfo.save();
+      }
+    } catch (syncErr) {
+      console.warn('[Sync SchoolInfo Warning]', syncErr.message);
+    }
 
     // Ensure database and collections exist if database name changed
     await provisionAccountDatabase(account.databaseName, account);
@@ -623,6 +642,9 @@ app.put('/api/admin/accounts/:id', requireAdmin, async (req, res) => {
         _id: account._id,
         email: account.email,
         name: account.name,
+        appName: account.appName || 'mcode',
+        logoUrl: account.logoUrl || '',
+        faviconUrl: account.faviconUrl || '',
         role: account.role,
         databaseName: account.databaseName,
         createdAt: account.createdAt
@@ -2082,7 +2104,7 @@ app.get('/api/teacher-classes', requireAuth, async (req, res) => {
   }
 });
 
-// GET School Info (institution metadata)
+// GET School Info (institution metadata and branding)
 app.get('/api/school-info', requireAuth, async (req, res) => {
   try {
     const dbName = resolveTenantDb(req);
@@ -2092,6 +2114,9 @@ app.get('/api/school-info', requireAuth, async (req, res) => {
       schoolInfo = await models.SchoolInfo.create({
         schoolName: 'Rangermate Academy',
         schoolCode: 'RMA-2026',
+        appName: 'mcode',
+        logoUrl: '',
+        faviconUrl: '',
         databaseName: dbName,
         principalName: 'Dr. Arthur Vance',
         contactEmail: 'admin@rangermate.com',
@@ -2104,6 +2129,80 @@ app.get('/api/school-info', requireAuth, async (req, res) => {
     res.json({ success: true, schoolInfo });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to fetch school info.' });
+  }
+});
+
+// PUT School Info / Branding (update school name, app name, logo, favicon)
+app.put('/api/school-info', requireAuth, async (req, res) => {
+  try {
+    const dbName = resolveTenantDb(req);
+    const models = getTenantModels(dbName);
+    let schoolInfo = await models.SchoolInfo.findOne();
+    if (!schoolInfo) {
+      schoolInfo = new models.SchoolInfo({ databaseName: dbName });
+    }
+
+    const { schoolName, appName, logoUrl, faviconUrl, principalName, contactEmail, phone, address, academicYear, term } = req.body;
+    if (schoolName !== undefined) schoolInfo.schoolName = schoolName.trim();
+    if (appName !== undefined) schoolInfo.appName = appName.trim();
+    if (logoUrl !== undefined) schoolInfo.logoUrl = logoUrl;
+    if (faviconUrl !== undefined) schoolInfo.faviconUrl = faviconUrl;
+    if (principalName !== undefined) schoolInfo.principalName = principalName.trim();
+    if (contactEmail !== undefined) schoolInfo.contactEmail = contactEmail.trim();
+    if (phone !== undefined) schoolInfo.phone = phone.trim();
+    if (address !== undefined) schoolInfo.address = address.trim();
+    if (academicYear !== undefined) schoolInfo.academicYear = academicYear.trim();
+    if (term !== undefined) schoolInfo.term = term.trim();
+    schoolInfo.updatedAt = new Date();
+
+    await schoolInfo.save();
+
+    // Also sync to master Account if database matches
+    try {
+      const matchedAccount = await Account.findOne({ databaseName: dbName });
+      if (matchedAccount) {
+        if (schoolName) matchedAccount.name = schoolName.trim();
+        if (appName !== undefined) matchedAccount.appName = appName.trim();
+        if (logoUrl !== undefined) matchedAccount.logoUrl = logoUrl;
+        if (faviconUrl !== undefined) matchedAccount.faviconUrl = faviconUrl;
+        await matchedAccount.save();
+      }
+    } catch (accErr) {
+      console.warn('[Sync Account Warning]', accErr.message);
+    }
+
+    res.json({ success: true, message: 'School info and branding updated successfully.', schoolInfo });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update school info.' });
+  }
+});
+
+// GET Public / Account Logo & Branding Endpoint
+app.get('/api/accounts/:id/logo', async (req, res) => {
+  try {
+    const { id } = req.params;
+    let account = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      account = await Account.findById(id).select('name appName logoUrl faviconUrl databaseName');
+    }
+    if (!account) {
+      account = await Account.findOne({ databaseName: id }).select('name appName logoUrl faviconUrl databaseName');
+    }
+    if (!account) {
+      return res.status(404).json({ success: false, message: 'Account not found.' });
+    }
+    res.json({
+      success: true,
+      account: {
+        id: account._id,
+        name: account.name,
+        appName: account.appName || 'mcode',
+        logoUrl: account.logoUrl || '',
+        faviconUrl: account.faviconUrl || ''
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch account branding.' });
   }
 });
 

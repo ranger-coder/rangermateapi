@@ -13,6 +13,18 @@ const accountSchema = new mongoose.Schema({
     type: String,
     default: 'Rangermate Academy'
   },
+  appName: {
+    type: String,
+    default: 'mcode'
+  },
+  logoUrl: {
+    type: String,
+    default: ''
+  },
+  faviconUrl: {
+    type: String,
+    default: ''
+  },
   role: {
     type: String,
     default: 'Institution / School'
