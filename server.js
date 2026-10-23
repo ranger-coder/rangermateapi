@@ -50,11 +50,18 @@ app.use(express.json({ limit: '10mb' }));
 
 // Serve Welcome Page at root /
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const rootIndex = path.join(__dirname, 'index.html');
+  const publicIndex = path.join(__dirname, 'public', 'index.html');
+  const fs = require('fs');
+  if (fs.existsSync(rootIndex)) {
+    return res.sendFile(rootIndex);
+  }
+  return res.sendFile(publicIndex);
 });
 
-// Serve static assets from public/
+// Serve static assets from public/ and root if needed
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 // Path Rewriting Middleware: Allow calling endpoints directly without /api prefix
 // (e.g. /auth/login -> /api/auth/login, /classes -> /api/classes)
@@ -2664,14 +2671,24 @@ app.get('/api/notifications', requireAuth, async (req, res) => {
   }
 });
 
-// Connect Database & Start Server
+// Cached Database Connection for Serverless environments (Netlify / Vercel / AWS Lambda)
+let isConnected = false;
+async function connectDB() {
+  if (isConnected || mongoose.connection.readyState === 1) {
+    return;
+  }
+  await mongoose.connect(MONGODB_URI);
+  isConnected = true;
+  console.log('[MongoDB] Connected successfully to MongoDB Atlas.');
+  await seedDefaultUser();
+}
+
+// Connect Database & Start Server for traditional Node.js process
 if (require.main === module) {
-  mongoose.connect(MONGODB_URI)
-    .then(async () => {
-      console.log('[MongoDB] Connected successfully to MongoDB Atlas.');
-      await seedDefaultUser();
+  connectDB()
+    .then(() => {
       app.listen(PORT, () => {
-        console.log(`[Server] mCode backend server running on http://localhost:${PORT}`);
+        console.log(`[Server] mcodellp backend running on http://localhost:${PORT}`);
       });
     })
     .catch((err) => {
@@ -2681,3 +2698,4 @@ if (require.main === module) {
 }
 
 module.exports = app;
+module.exports.connectDB = connectDB;

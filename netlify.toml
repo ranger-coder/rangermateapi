@@ -1,0 +1,112 @@
+[build]
+  functions = "netlify/functions"
+  publish = "."
+
+# Serve static landing page at root /
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+
+# Proxy Swagger documentation
+[[redirects]]
+  from = "/docs/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+# Proxy all /api/* routes to Netlify Function
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+# Proxy direct endpoints without /api (e.g., /auth/*, /classes, /subscription/*)
+[[redirects]]
+  from = "/auth/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/admin/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/subscription/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/user/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/store/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/rewards/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/classes/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/classes"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/homeworks/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/homeworks"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/attendance/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/attendance"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/productivity/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/announcements/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/announcements"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/leaves/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/leaves"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/notifications"
+  to = "/.netlify/functions/api"
+  status = 200
