@@ -36,8 +36,25 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./docs/swaggerSpec');
 
 const app = express();
+const PORT = process.env.PORT || 5001;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://zayan_db_user:z5MJfs5tkTPXVZjC@cluster0.avaiocl.mongodb.net/rangermate?retryWrites=true&w=majority';
 const JWT_SECRET = process.env.JWT_SECRET || 'rangermate_secure_jwt_secret_key_2026';
+
+// Cached Database Connection for Serverless environments (Netlify / Vercel / AWS Lambda)
+let isConnected = false;
+async function connectDB() {
+  if (isConnected || mongoose.connection.readyState === 1) {
+    return;
+  }
+  await mongoose.connect(MONGODB_URI, {
+    serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 10000,
+    socketTimeoutMS: 20000,
+    bufferCommands: false
+  });
+  isConnected = true;
+  console.log('[MongoDB] Connected successfully to MongoDB Atlas.');
+}
 
 // Middleware
 app.use(cors({
@@ -49,6 +66,10 @@ app.use(express.json({ limit: '10mb' }));
 
 // Ensure DB connected middleware for serverless
 app.use(async (req, res, next) => {
+  // Static files or root doesn't need DB
+  if (req.path === '/' || req.path === '/index.html' || req.path.startsWith('/assets/')) {
+    return next();
+  }
   try {
     await connectDB();
     next();
@@ -2792,18 +2813,6 @@ app.get('/api/notifications', requireAuth, async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to fetch notifications.' });
   }
 });
-
-// Cached Database Connection for Serverless environments (Netlify / Vercel / AWS Lambda)
-let isConnected = false;
-async function connectDB() {
-  if (isConnected || mongoose.connection.readyState === 1) {
-    return;
-  }
-  await mongoose.connect(MONGODB_URI);
-  isConnected = true;
-  console.log('[MongoDB] Connected successfully to MongoDB Atlas.');
-  await seedDefaultUser();
-}
 
 // Connect Database & Start Server for traditional Node.js process
 if (require.main === module) {
