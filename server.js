@@ -94,13 +94,26 @@ app.use((req, res, next) => {
   next();
 });
 
-// Swagger Documentation at /docs and /api/docs
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
-  customSiteTitle: 'mCode API Documentation'
-}));
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
-  customSiteTitle: 'mCode API Documentation'
-}));
+// Swagger JSON Spec endpoint
+app.get('/docs/swagger.json', (req, res) => {
+  res.json(swaggerDocument);
+});
+app.get('/api/docs/swagger.json', (req, res) => {
+  res.json(swaggerDocument);
+});
+
+// Swagger Documentation at /docs and /api/docs with CDN assets for serverless resilience
+const swaggerOptions = {
+  customSiteTitle: 'mcodellp API Documentation',
+  customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css',
+  customJs: [
+    'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-standalone-preset.min.js'
+  ]
+};
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, swaggerOptions));
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, swaggerOptions));
 
 // Helper: Generate clean database name for an account (e.g. school)
 function generateDbName(nameOrEmail) {

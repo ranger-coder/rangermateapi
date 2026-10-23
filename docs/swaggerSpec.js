@@ -1,14 +1,18 @@
 module.exports = {
   "openapi": "3.0.0",
   "info": {
-    "title": "mCode Platform Web API",
+    "title": "mcodellp API Platform",
     "version": "1.0.0",
-    "description": "RESTful API documentation for mCode application (Authentication, Classes, Subscriptions, Gamification, Attendance, and Productivity tools)"
+    "description": "RESTful API documentation for mcodellp application (Authentication, Classes, Subscriptions, Gamification, Attendance, and Productivity tools)"
   },
   "servers": [
     {
+      "url": "/",
+      "description": "Current Server (Relative)"
+    },
+    {
       "url": "https://api.mcodellp.com",
-      "description": "Hosted Production API Server"
+      "description": "Custom API Domain"
     },
     {
       "url": "http://localhost:5001",

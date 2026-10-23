@@ -10,7 +10,22 @@
 
 # Proxy Swagger documentation
 [[redirects]]
+  from = "/docs"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
   from = "/docs/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/api/docs"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[[redirects]]
+  from = "/api/docs/*"
   to = "/.netlify/functions/api"
   status = 200
 
