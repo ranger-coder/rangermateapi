@@ -178,6 +178,129 @@ module.exports = {
         }
       }
     },
+    "/api/admin/accounts/{id}": {
+      "put": {
+        "summary": "Edit Account (School Name, App Name, Logo URL, Favicon URL)",
+        "tags": [
+          "Admin",
+          "Branding"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "example": "Rangermate Academy" },
+                  "appName": { "type": "string", "example": "mcode" },
+                  "logoUrl": { "type": "string", "example": "assets/RTPL_favicon.png" },
+                  "faviconUrl": { "type": "string", "example": "assets/RTPL_favicon.png" },
+                  "email": { "type": "string", "example": "admin@rangermate.ae" },
+                  "role": { "type": "string", "example": "Institution / School" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Account branding and configuration updated successfully"
+          }
+        }
+      }
+    },
+    "/api/school-info": {
+      "get": {
+        "summary": "Get School Metadata and App Branding",
+        "tags": [
+          "School Info",
+          "Branding"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "School details, appName, logoUrl, and faviconUrl"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update School Metadata and App Branding",
+        "tags": [
+          "School Info",
+          "Branding"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "schoolName": { "type": "string" },
+                  "appName": { "type": "string" },
+                  "logoUrl": { "type": "string" },
+                  "faviconUrl": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Branding updated successfully"
+          }
+        }
+      }
+    },
+    "/api/accounts/{id}/logo": {
+      "get": {
+        "summary": "Public Account Logo & Branding Endpoint",
+        "tags": [
+          "Branding"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Account ID or Database Name",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Public branding details (logo, favicon, app name)"
+          }
+        }
+      }
+    },
     "/api/admin/subscriptions": {
       "get": {
         "summary": "Get All Student Subscriptions",
